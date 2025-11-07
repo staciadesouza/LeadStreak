@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive Gross Profit Calculator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+        body {
+            box-sizing: border-box;
+        }
+        .calculator-container {
+            background: linear-gradient(135deg, #021A32 0%, #034078 100%);
+        }
+        .result-animation {
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .input-focus:focus {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        .slider {
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #021A32;
+            cursor: pointer;
+            border: 3px solid white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        .slider::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #021A32;
+            cursor: pointer;
+            border: 3px solid white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+    </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="/_sdk/element_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full">
+  <main class="calculator-container min-h-full flex items-center justify-center p-6">
+   <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-lg">
+    <header class="text-center mb-8">
+     <h1 id="calculator-title" class="text-3xl font-bold text-gray-800 mb-2">Interactive Gross Profit Calculator</h1>
+     <p class="text-gray-600">Enter revenue and adjust costs with the slider</p>
+    </header><!-- Calculator Section -->
+    <div id="calculator-section" class="space-y-6">
+     <div><label for="revenue" id="revenue-label" class="block text-sm font-semibold text-gray-700 mb-2">Total Revenue ($)</label> <input type="number" id="revenue" step="1" min="0" class="input-focus w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-gray-800 focus:outline-none transition-all duration-200 text-lg" placeholder="Enter total revenue">
+     </div>
+     <div id="slider-section" class="hidden"><label class="block text-sm font-semibold text-gray-700 mb-4">Adjust Cost of Sales</label> <!-- Visual Revenue Bar -->
+      <div class="relative mb-6">
+       <div class="h-12 bg-gray-200 rounded-lg overflow-hidden relative">
+        <div id="cogs-bar" class="h-full transition-all duration-200 relative" style="background-color: #DF7D1C;"><span id="cogs-label-bar" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-white text-xs font-semibold"></span>
+        </div>
+        <div id="profit-bar" class="absolute top-0 right-0 h-full transition-all duration-200" style="background-color: #B75500;"><span id="profit-label-bar" class="absolute left-2 top-1/2 transform -translate-y-1/2 text-white text-xs font-semibold"></span>
+        </div>
+       </div>
+       <div class="flex justify-between text-xs text-gray-600 mt-1"><span>$0</span> <span id="revenue-display">Revenue</span>
+       </div>
+      </div><!-- Slider -->
+      <div class="relative mb-4"><input type="range" id="cogs-slider" min="0" max="100" value="50" class="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
+       <div class="flex justify-between text-xs text-gray-600 mt-1"><span>0%</span> <span>50%</span> <span>100%</span>
+       </div>
+      </div><!-- Current Values Display -->
+      <div class="grid grid-cols-2 gap-4 text-center mb-4">
+       <div class="bg-orange-50 p-3 rounded-lg border border-orange-200">
+        <div class="text-xs font-semibold" style="color: #DF7D1C;">
+         Cost of Sales
+        </div>
+        <div id="current-cogs" class="text-lg font-bold" style="color: #DF7D1C;">
+         $0
+        </div>
+        <div id="cogs-percentage" class="text-xs" style="color: #DF7D1C;">
+         0%
+        </div>
+       </div>
+       <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+        <div class="text-xs font-semibold" style="color: #B75500;">
+         Gross Profit
+        </div>
+        <div id="current-profit" class="text-lg font-bold" style="color: #B75500;">
+         $0
+        </div>
+        <div id="profit-percentage" class="text-xs" style="color: #B75500;">
+         0%
+        </div>
+       </div>
+      </div>
+     </div>
+    </div>
+    <div id="results" class="mt-8 hidden">
+     <div class="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-6 border border-green-200">
+      <h2 class="text-xl font-bold text-gray-800 mb-4 text-center">Gross Profit Margin Analysis</h2>
+      <div class="space-y-4">
+       <div class="flex justify-between items-center p-3 bg-white rounded-lg shadow-sm"><span class="font-semibold text-gray-700">Gross Profit Margin:</span> <span id="gross-margin" class="text-2xl font-bold text-blue-600"></span>
+       </div>
+      </div>
+      <div id="explanation" class="mt-4 p-4 bg-white rounded-lg border-l-4 border-gray-800">
+       <h3 class="font-semibold text-gray-800 mb-2">What this means:</h3>
+       <p id="explanation-text" class="text-sm text-gray-600"></p>
+      </div>
+     </div>
+    </div>
+    <div class="mt-6 text-center">
+     <div class="text-xs text-gray-500 space-y-1">
+      <p><strong>Formula:</strong> Gross Profit = Revenue - Cost of Sales</p>
+      <p><strong>Margin:</strong> (Gross Profit ÷ Revenue) × 100</p>
+     </div>
+    </div>
+   </div>
+  </main>
+  <script>
+        let currentRevenue = 0;
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(amount);
+        }
+
+        function formatPercentage(percentage) {
+            return Math.round(percentage) + '%';
+        }
+
+        function getMarginInterpretation(margin) {
+            if (margin >= 50) {
+                return "Excellent! This is a very healthy gross profit margin indicating strong pricing power and efficient cost management.";
+            } else if (margin >= 30) {
+                return "Good gross profit margin. Your business has solid profitability with room for operational expenses.";
+            } else if (margin >= 15) {
+                return "Moderate gross profit margin. Consider reviewing pricing strategy or reducing costs to improve profitability.";
+            } else if (margin >= 5) {
+                return "Low gross profit margin. This leaves little room for operational expenses and may indicate pricing or cost issues.";
+            } else {
+                return "Very low gross profit margin. Immediate attention needed to pricing strategy and cost management.";
+            }
+        }
+
+        function updateCalculations() {
+            if (currentRevenue <= 0) return;
+
+            const cogsPercentage = parseFloat(document.getElementById('cogs-slider').value);
+            const cogs = (currentRevenue * cogsPercentage) / 100;
+            const grossProfit = currentRevenue - cogs;
+            const grossMargin = (grossProfit / currentRevenue) * 100;
+
+            // Update visual bar
+            const cogsBar = document.getElementById('cogs-bar');
+            const profitBar = document.getElementById('profit-bar');
+            
+            cogsBar.style.width = cogsPercentage + '%';
+            profitBar.style.width = (100 - cogsPercentage) + '%';
+
+            // Update bar labels
+            if (cogsPercentage > 15) {
+                document.getElementById('cogs-label-bar').textContent = 'COS';
+            } else {
+                document.getElementById('cogs-label-bar').textContent = '';
+            }
+
+            if ((100 - cogsPercentage) > 15) {
+                document.getElementById('profit-label-bar').textContent = 'Gross Profit';
+            } else {
+                document.getElementById('profit-label-bar').textContent = '';
+            }
+
+            // Update current values
+            document.getElementById('current-cogs').textContent = formatCurrency(cogs);
+            document.getElementById('current-profit').textContent = formatCurrency(grossProfit);
+            document.getElementById('cogs-percentage').textContent = formatPercentage(cogsPercentage);
+            document.getElementById('profit-percentage').textContent = formatPercentage(100 - cogsPercentage);
+
+            // Update results section
+            document.getElementById('gross-margin').textContent = formatPercentage(grossMargin);
+            document.getElementById('explanation-text').textContent = getMarginInterpretation(grossMargin);
+            
+            document.getElementById('results').classList.remove('hidden');
+            document.getElementById('results').classList.add('result-animation');
+        }
+
+        function handleRevenueInput() {
+            const revenueInput = document.getElementById('revenue');
+            const sliderSection = document.getElementById('slider-section');
+            const revenue = parseFloat(revenueInput.value);
+
+            if (revenue > 0) {
+                currentRevenue = revenue;
+                document.getElementById('revenue-display').textContent = formatCurrency(revenue);
+                sliderSection.classList.remove('hidden');
+                updateCalculations();
+            } else {
+                currentRevenue = 0;
+                sliderSection.classList.add('hidden');
+                document.getElementById('results').classList.add('hidden');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('revenue').addEventListener('input', handleRevenueInput);
+            document.getElementById('cogs-slider').addEventListener('input', updateCalculations);
+        });
+    </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99a957f2c7e4825a',t:'MTc2MjQ4MTk0My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
